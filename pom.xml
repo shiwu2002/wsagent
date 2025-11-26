@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.0</version>
+		<version>3.3.5</version>
 		<relativePath />
 	</parent>
 	<groupId>com.zpark</groupId>
@@ -24,13 +24,27 @@
 			<groupId>com.github.yulichang</groupId>
 			<artifactId>mybatis-plus-join-boot-starter</artifactId>
 			<version>1.5.4</version>
+			<exclusions>
+				<!-- 排除旧版 MyBatis Spring Boot Starter，避免注入 mapper 时 factoryBeanObjectType 为 String 导致 Spring 6 报错 -->
+				<exclusion>
+					<groupId>org.mybatis.spring.boot</groupId>
+					<artifactId>mybatis-spring-boot-starter</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- MyBatis-Plus 核心 -->
 		<dependency>
 			<groupId>com.baomidou</groupId>
 			<artifactId>mybatis-plus-boot-starter</artifactId>
-			<version>3.5.5</version>
+			<version>3.5.6</version>
+			<exclusions>
+				<!-- 仅排除可能引入的旧版 mybatis-spring-boot-starter，其他版本由显式声明统一管理 -->
+				<exclusion>
+					<groupId>org.mybatis.spring.boot</groupId>
+					<artifactId>mybatis-spring-boot-starter</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Spring Data Redis -->
@@ -62,11 +76,6 @@
 			<artifactId>spring-ai-alibaba-starter-dashscope</artifactId>
 			<version>1.1.0.0-M5</version>
 		</dependency>
-		<dependency>
-			<groupId>com.alibaba.cloud.ai</groupId>
-			<artifactId>spring-ai-alibaba-studio</artifactId>
-			<version>1.1.0.0-M5</version>
-		</dependency>
 
 		<!-- Spring AI Ollama -->
 		<dependency>
@@ -96,6 +105,29 @@
 			<artifactId>modelscope-chat-sdk</artifactId>
 			<version>0.1.0</version>
 		</dependency>
+
+
+		<!-- 显式使用与 Spring Boot 3.3/Spring 6.1 兼容的 MyBatis Starter -->
+		<dependency>
+			<groupId>org.mybatis.spring.boot</groupId>
+			<artifactId>mybatis-spring-boot-starter</artifactId>
+			<version>3.0.4</version>
+		</dependency>
+
+		<!-- 修复 MyBatis-Plus 3.5.6 与 MyBatis 核心版本不兼容（缺少 parsePendingMethods(boolean)）问题 -->
+		<!-- 强制升级 MyBatis 核心到 3.5.16+，保证方法存在 -->
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis</artifactId>
+			<version>3.5.16</version>
+		</dependency>
+		<!-- 与之配套的 mybatis-spring 版本 -->
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis-spring</artifactId>
+			<version>3.0.3</version>
+		</dependency>
+
 
 		<!-- 测试 -->
 		<dependency>
