@@ -87,7 +87,8 @@ public class ModelConfigServiceImpl implements ModelConfigService {
         }
         // 使用工厂按“厂家+模型名”构建智能体，作为连通性校验
         try {
-         ReactAgent agent = agentFactory.getAgent(cfg.getModelFactory(), cfg.getModelName());
+         ReactAgent agent = agentFactory.getAgent(cfg.getModelFactory(), cfg.getModelName(),
+                 cfg.getModelContextPrompt()+cfg.getModelSystemPrompt());
             return "构建成功：vendor=" + cfg.getModelFactory() + ", model=" + cfg.getModelName();
         } catch (Exception e) {
             return "构建失败：" + e.getMessage();
