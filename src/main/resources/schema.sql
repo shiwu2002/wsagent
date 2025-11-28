@@ -1,50 +1,32 @@
-/*
-  初始化数据库表结构（MySQL）
-  - 使用 MyBatis-Plus 注解实体，无需 XML，即可通过 MPJBaseMapper CRUD
-  - 包含：roles、agents、messages 三张表
-  - 可根据需要调整字段类型与索引
-*/
+-- 创建聊天消息表（MySQL）
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  type VARCHAR(32) NOT NULL COMMENT '消息类型：GROUP_MSG/PRIVATE_MSG',
+  from_user_id VARCHAR(128) NOT NULL COMMENT '发送方用户ID',
+  to_user_id VARCHAR(128) NULL COMMENT '私聊目标用户ID（群聊为空）',
+  room_id VARCHAR(128) NULL COMMENT '群聊房间ID（私聊为空）',
+  content TEXT NOT NULL COMMENT '消息内容',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (id),
+  KEY idx_room_time (room_id, created_at),
+  KEY idx_private_pair_time (from_user_id, to_user_id, created_at),
+  KEY idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天消息表';
 
-CREATE TABLE IF NOT EXISTS roles (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(255) NOT NULL,
-  description VARCHAR(512),
-  system_memory TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS agents (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(255) NOT NULL,
-  role_id BIGINT,
-  model_type VARCHAR(64),   -- 与 LlmClient.ModelType 对应的字符串，如 "OLLAMA"、"QWEN"
-  model_name VARCHAR(128),  -- 具体模型名称，如 "qwen3:8b"
-  description VARCHAR(512),
-  CONSTRAINT fk_agents_role FOREIGN KEY (role_id) REFERENCES roles (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS messages (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  sender_agent_id BIGINT,
-  receiver_agent_id BIGINT,
-  session_id VARCHAR(128),
-  room_id VARCHAR(128),
-  content TEXT,
-  model_type VARCHAR(64),
-  model_name VARCHAR(128),
-  role_id BIGINT,
-  direction VARCHAR(8),     -- IN / OUT
-  created_at BIGINT,        -- epoch 毫秒
-  round_id BIGINT,          -- 所属协作回合ID
-  is_autonomous TINYINT(1), -- 是否为自主行为：1=true, 0=false
-  metadata JSON NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 索引优化（根据典型查询模式添加）
-CREATE INDEX IF NOT EXISTS idx_messages_session ON messages (session_id);
-CREATE INDEX IF NOT EXISTS idx_messages_room ON messages (room_id);
-CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages (sender_agent_id);
-CREATE INDEX IF NOT EXISTS idx_messages_receiver ON messages (receiver_agent_id);
-CREATE INDEX IF NOT EXISTS idx_messages_round ON messages (round_id);
-CREATE INDEX IF NOT EXISTS idx_messages_autonomous ON messages (is_autonomous);
+CREATE TABLE `ai_model_info` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `model_factory` VARCHAR(100) NOT NULL COMMENT '模型厂家',
+  `model_name` VARCHAR(200) NOT NULL COMMENT '模型名称',
+  `model_context_prompt` TEXT COMMENT '模型背景提示词',
+  `model_system_prompt` TEXT COMMENT '模型系统提示词',
+  `creator` VARCHAR(50) NOT NULL COMMENT '创建人',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  `is_deleted` TINYINT(1) NOT NULL DEFAULT '0' COMMENT '逻辑删除字段：0-未删除，1-已删除',
+  PRIMARY KEY (`id`),
+  KEY `idx_model_factory` (`model_factory`),
+  KEY `idx_model_name` (`model_name`),
+  KEY `idx_creator` (`creator`),
+  KEY `idx_is_deleted` (`is_deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI模型信息表';
