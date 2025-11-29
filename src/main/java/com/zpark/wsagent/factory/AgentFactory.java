@@ -4,10 +4,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Component;
 
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.zpark.wsagent.chatModel.AgentProvider;
+import com.zpark.wsagent.tools.ToolBase;
 
 /**
  * Agent 工厂：
@@ -41,7 +43,7 @@ public class AgentFactory {
      * @return ReactAgent
      * @throws IllegalArgumentException 当 vendor 未注册时抛出
      */
-    public ReactAgent getAgent(String vendor, String model,String prompt) {
+    public ReactAgent getAgent(String vendor, String model,String prompt,List<ToolCallback> tool) {
         if (vendor == null || vendor.isEmpty()) {
             throw new IllegalArgumentException("vendor 不能为空");
         }
@@ -49,7 +51,7 @@ public class AgentFactory {
         if (provider == null) {
             throw new IllegalArgumentException("未找到对应的 AgentProvider，vendor=" + vendor + "。已注册的供应商：" + providerRegistry.keySet());
         }
-        return provider.getAgent(model,prompt);
+        return provider.getAgent(model,prompt,tool);
     }
 
     /**

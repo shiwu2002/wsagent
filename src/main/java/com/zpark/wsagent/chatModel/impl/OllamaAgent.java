@@ -1,8 +1,11 @@
 package com.zpark.wsagent.chatModel.impl;
 
+import java.util.List;
+
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
+import org.springframework.ai.tool.ToolCallback;
 
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.zpark.wsagent.chatModel.AgentProvider;
@@ -14,7 +17,7 @@ public class OllamaAgent implements AgentProvider {
 
 
     @Override
-    public ReactAgent getAgent(String model,String prompt) { // 统一接口方法：根据模型名返回 ReactAgent
+    public ReactAgent getAgent(String model,String prompt,List<ToolCallback> tool ) { // 统一接口方法：根据模型名返回 ReactAgent
         // 构建Ollama API客户端
         OllamaApi builder = OllamaApi.builder() // 通过静态 builder() 方法获取 OllamaApi 的构建器
                 .build(); // 调用 build() 生成 OllamaApi 客户端实例（使用默认配置）

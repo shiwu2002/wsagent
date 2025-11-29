@@ -7,7 +7,10 @@ import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.zpark.wsagent.chatModel.AgentProvider;
 
+import java.util.List;
+
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,7 +23,7 @@ public class DashScope implements AgentProvider {
     private String apiUrl;
 
     @Override
-    public ReactAgent getAgent(String modelName,String prompt) {
+    public ReactAgent getAgent(String modelName,String prompt,List<ToolCallback> tool) {
         // 创建 DashScope API 实例
         DashScopeApi dashScopeApi = DashScopeApi.builder()
                 .apiKey(apiKey)
@@ -37,6 +40,7 @@ public class DashScope implements AgentProvider {
                 .name(modelName)
                 .model(chatModel)
                 .instruction(prompt)
+                .tools()
                 .build();
         return agent;
     }

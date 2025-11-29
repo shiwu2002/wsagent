@@ -1,6 +1,9 @@
 package com.zpark.wsagent.chatModel.impl;
 
+import java.util.List;
+
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -38,7 +41,7 @@ public class modelScopeAi implements AgentProvider {
     /**
      * 暴露 ChatClient.Builder，供 AiBuilderConfig 注入使用
      */
-    public ReactAgent getAgent(String model,String prompt) {
+    public ReactAgent getAgent(String model,String prompt,List<ToolCallback> tool) {
         WebClient webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .defaultHeader("Authorization", "Bearer " + apiKey)
