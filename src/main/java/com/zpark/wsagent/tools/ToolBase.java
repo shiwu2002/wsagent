@@ -8,11 +8,11 @@ import org.springframework.ai.tool.ToolCallback;
 import com.zpark.wsagent.dto.ToolMessage;
 
 
-public interface ToolBase extends  BiFunction<ToolMessage,ToolContext, ToolCallback> {
+public interface ToolBase extends  BiFunction<ToolMessage,ToolContext, String> {
 
     public String toolName();
     public String ToolDescription();
-    
+    ToolCallback getToolCallback();
 
 
 }

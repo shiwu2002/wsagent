@@ -17,13 +17,9 @@ public class leaveGroupTool  implements ToolBase{
     private ChatConnectService chatConnectService;
 
     @Override
-    public ToolCallback apply(ToolMessage t, ToolContext u) {
+    public String apply(ToolMessage t, ToolContext u) {
         chatConnectService.leaveGroup(t.getRoomId(), t.getSenderId());
-        return FunctionToolCallback
-                .builder(toolName(), this)
-                .description(ToolDescription())
-                .inputType(ToolMessage.class)
-                .build();
+        return "Success";
     }
 
     @Override
@@ -35,5 +31,14 @@ public class leaveGroupTool  implements ToolBase{
     public String ToolDescription() {
         return "Leave a group chat by providing room ID and user ID. Input should be in JSON format with 'roomId' and 'senderId' fields.";
     }
-    
+
+    @Override
+    public ToolCallback getToolCallback() {
+        return  FunctionToolCallback
+                .builder( toolName(), this)
+                .description( ToolDescription())
+                .inputType(ToolMessage.class)
+                .build();
+    }
+
 }

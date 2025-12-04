@@ -1,7 +1,6 @@
 package com.zpark.wsagent.tools.impl;
 
 import com.zpark.wsagent.enums.IntentType;
-import com.zpark.wsagent.factory.ToolFactory;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.function.FunctionToolCallback;
 import org.springframework.ai.chat.model.ToolContext;
@@ -12,48 +11,36 @@ import com.zpark.wsagent.dto.ToolMessage;
 import com.zpark.wsagent.service.ChatConnectService;
 import com.zpark.wsagent.tools.ToolBase;
 
-import java.util.List;
+import java.util.logging.Logger;
 
 @Component
 public class WebSocketUnifiedTool implements ToolBase {
 
+    private static final Logger logger = Logger.getLogger(WebSocketUnifiedTool.class.getName());
+
     @Autowired
     private ChatConnectService chatConnectService;
-    
-    @Autowired
-    private ToolFactory toolFactory;
+
 
     @Override
-    public ToolCallback apply(ToolMessage t, ToolContext toolContext) {
+    public String apply(ToolMessage t, ToolContext toolContext) {
         try {
-            List<ToolBase> tools = toolFactory.getTools(t.getIntentType());
-            // 使用第一个工具处理（优先使用专门工具，备选用统一工具）
-            if (!tools.isEmpty()) {
-                ToolBase specificTool = tools.get(0);
-                if (specificTool != this) {
-                    // 使用特定工具处理
-                    return specificTool.apply(t, toolContext);
-                } else {
-                    // 使用本工具处理
-                    if (t == null || t.getIntentType() == null) {
-                        // 默认处理
-                        handleDefaultIntent(t);
-                    } else {
-                        // 根据意图类型处理不同操作
-                        handleIntent(t);
-                    }
+            if (t == null || t.getIntentType() == null) {
+                // 默认处理
+                if (t != null) {
+                    handleDefaultIntent(t);
                 }
+            } else {
+                // 根据意图类型处理不同操作
+                handleIntent(t);
             }
         } catch (Exception e) {
-            // 记录异常日志
-            e.printStackTrace();
+            logger.severe("Error occurred while processing WebSocket intent: " + e.getMessage());
+            e.printStackTrace(); // 生产环境中推荐移除此行并依赖日志系统
+            return "Failed due to internal error";
         }
 
-        return FunctionToolCallback
-                .builder(toolName(), this)
-                .description(ToolDescription())
-                .inputType(ToolMessage.class)
-                .build();
+        return "Success";
     }
 
     /**
@@ -62,23 +49,52 @@ public class WebSocketUnifiedTool implements ToolBase {
      */
     private void handleIntent(ToolMessage t) {
         IntentType intent = t.getIntentType();
+        String roomId = t.getRoomId();
+        String senderId = t.getSenderId();
+        String targetUserId = t.getTargetUserId();
+
+        if (senderId == null) {
+            logger.warning("Missing sender ID in tool message");
+            return;
+        }
+
         switch (intent) {
             case JOIN_GROUP:
-                chatConnectService.joinGroup(t.getRoomId(), t.getSenderId());
+                if (roomId == null) {
+                    logger.warning("Missing room ID for JOIN_GROUP operation");
+                    return;
+                }
+                chatConnectService.joinGroup(roomId, senderId);
                 break;
             case LEAVE_GROUP:
-                chatConnectService.leaveGroup(t.getRoomId(), t.getSenderId());
+                if (roomId == null) {
+                    logger.warning("Missing room ID for LEAVE_GROUP operation");
+                    return;
+                }
+                chatConnectService.leaveGroup(roomId, senderId);
                 break;
             case PRIVATE_CHAT:
-                chatConnectService.connectPrivateChat(t.getSenderId(), t.getTargetUserId());
+                if (targetUserId == null) {
+                    logger.warning("Missing target user ID for PRIVATE_CHAT operation");
+                    return;
+                }
+                chatConnectService.connectPrivateChat(senderId, targetUserId);
                 break;
             case GET_ONLINE_USERS:
-                chatConnectService.getGroupMembers(t.getRoomId());
+                if (roomId == null) {
+                    logger.warning("Missing room ID for GET_ONLINE_USERS operation");
+                    return;
+                }
+                chatConnectService.getGroupMembers(roomId);
                 break;
             case DISCONNECT_PRIVATE_CHAT:
-                chatConnectService.disconnectPrivateChat(t.getSenderId(), t.getTargetUserId());
+                if (targetUserId == null) {
+                    logger.warning("Missing target user ID for DISCONNECT_PRIVATE_CHAT operation");
+                    return;
+                }
+                chatConnectService.disconnectPrivateChat(senderId, targetUserId);
                 break;
-        
+
             // 其他意图可以根据需要扩展
             default:
                 handleDefaultIntent(t);
@@ -93,7 +109,10 @@ public class WebSocketUnifiedTool implements ToolBase {
     private void handleDefaultIntent(ToolMessage t) {
         // 默认处理逻辑，可以根据实际需求进行调整
         if (t.getRoomId() != null && t.getSenderId() != null) {
+            logger.info("Executing default action: joining group.");
             chatConnectService.joinGroup(t.getRoomId(), t.getSenderId());
+        } else {
+            logger.warning("Default handler skipped due to missing roomId or senderId.");
         }
     }
 
@@ -105,5 +124,13 @@ public class WebSocketUnifiedTool implements ToolBase {
     @Override
     public String ToolDescription() {
         return "Unified tool for handling various WebSocket operations. Supports multiple intents like JOIN_GROUP, LEAVE_GROUP, PRIVATE_CHAT, GET_ONLINE_USERS, DISCONNECT_PRIVATE_CHAT, etc.";
+    }
+
+    @Override
+    public ToolCallback getToolCallback() {
+        return FunctionToolCallback.builder(toolName(), this)
+                .description(ToolDescription())
+                .inputType(ToolMessage.class)
+                .build();
     }
 }

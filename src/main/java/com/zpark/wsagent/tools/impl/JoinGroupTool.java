@@ -22,7 +22,7 @@ public class JoinGroupTool implements ToolBase {
     private ChatConnectService chatConnectService;
 
     @Override
-    public ToolCallback apply(ToolMessage t, ToolContext u) {
+    public String apply(ToolMessage t, ToolContext u) {
         try {
             if (t == null || t.getRoomId() == null || t.getSenderId() == null) {
                 log.warn("Invalid input parameters for joinGroupTool: roomId or senderId is null");
@@ -34,11 +34,7 @@ public class JoinGroupTool implements ToolBase {
             log.error("Error occurred while joining group: roomId={}, senderId={}", t.getRoomId(), t.getSenderId(), e);
         }
         
-        return FunctionToolCallback
-                .builder(toolName(), this)
-                .description(ToolDescription())
-                .inputType(ToolMessage.class)
-                .build();
+        return  "Success";
     }
 
     @Override
@@ -49,6 +45,15 @@ public class JoinGroupTool implements ToolBase {
     @Override
     public String ToolDescription() {
         return "Join a group chat by providing room ID and user ID. Input should be in JSON format with 'roomId' and 'senderId' fields.";
+    }
+
+    @Override
+    public ToolCallback getToolCallback() {
+        return  FunctionToolCallback
+                .builder( toolName(), this)
+                .description( ToolDescription())
+                .inputType(ToolMessage.class)
+                .build();
     }
 
 

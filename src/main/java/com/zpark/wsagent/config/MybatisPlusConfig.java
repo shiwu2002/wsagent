@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
  * - Mapper 扫描
  */
 @Configuration
-@MapperScan("com.zpark.wsagent.**.persistence")
+@MapperScan("com.zpark.wsagent.mapper")
 public class MybatisPlusConfig {
 
     /**
